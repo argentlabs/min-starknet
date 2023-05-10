@@ -50,7 +50,7 @@ Deployed contracts coming in soon..
 
 ## CONTRIBUTION GUIDELINES
 1. Keep implementation as simple and minimalistic as possible.
-2. Comment codes in details to enable others understand what your codes do. Natspec is the preferred choice.
+2. Comment codes in details to enable others understand what your codes do.
 3. Keep your codes simple and clean.
 4. When opening PRs, give a detailed description of what you are trying to fix or add.
    Let's build a great learning REPO for frens looking to get started with Cairo. 😉
