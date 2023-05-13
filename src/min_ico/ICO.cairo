@@ -79,7 +79,7 @@ mod ICO {
         let allowance = IERC20Dispatcher {contract_address: eth_contract}.allowance(caller, this_contract);
         assert(allowance >= u256_from_felt252(REGPRICE), 'approve at least 0.001 ETH!');
 
-        IERC20Dispatcher {contract_address: token}.transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
+        IERC20Dispatcher {contract_address: eth_contract}.transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
 
         registered_address::write(caller, true);
         return ();
