@@ -3,11 +3,6 @@
   <h2> ⚡ Learn Cairo by building 🧑🏽‍💻 </h2>
 <div align="center">
 <br />
-
-[![GitHub Workflow Status](https://github.com/starkware-libs/cairo/actions/workflows/ci.yml/badge.svg)](https://github.com/starkware-libs/cairo/actions/workflows/ci.yml)
-[![Project license](https://img.shields.io/github/license/starkware-libs/cairo.svg?style=flat-square)](LICENSE)
-[![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/starkware-libs/cairo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
-
 </div>
 </div>
 
@@ -60,8 +55,8 @@ The max amount of token that can belong to the AMM `BALANCE_UPPER_BOUND`, the ma
 
 The `get_account_token_balance` and `get_pool_token_balance` functions can be used to get the account and pool balance repspectively. The `set_pool_token_balance` is used to set the pool balance for a specific token type, and the `add_demo_token` can be used to add demo tokens to a user's account for testing the deployed app. Finally the `init_pool` is used to initialize a new AMM pool and the `swap` function is called to perform a swap.
 
-### MIN-BLIND-AUCTION
-A blind auction is a sealed bidding auction in which bidders simultaneously submit bids to the auctioneer without having knowledge of what other bidders bidded. This might sound paradoxical in a public system like blockchains, but cryptography comes to the rescue.
+### MIN-COMMIT-REVEAL
+In this repo we demonstrate how to implement a commit-reveal scheme by building a blind auction. A blind auction is a sealed bidding auction in which bidders simultaneously submit bids to the auctioneer without having knowledge of what other bidders bidded. This might sound paradoxical in a public system like blockchains, but cryptography comes to the rescue.
 
 During the bidding period a bidder calls the `make_bid` function, a bidder does not actually send their bid, but only a hashed version of it. Since it is currently considered practically impossible to find two (sufficiently long) values whose hash values are equal, the bidder commits to the bid by that. After the end of the bidding period, the bidders have to reveal their bids by calling the `reveal` function: They send their values unencrypted, and the contract checks that the hashed value `bid_hash` is the same as the one provided during the bidding period `bid_commit`.
 
