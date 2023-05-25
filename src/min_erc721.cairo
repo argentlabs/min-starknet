@@ -1,1 +1,2 @@
 mod ERC721;
+mod IERC721;
