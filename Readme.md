@@ -39,13 +39,13 @@ One of the basic things we learn to do whilst starting out with Smart contract d
 
 The goal for this project is to build and deploy a simple ERC20 token contract.
 
-### MIN-ICO
+### MIN-TOKEN-SALE
 
-min-ico is a minimal implementation of a presale or ICO in Cairo. An initial coin offerings (ICOs) is the equivalent of an IPO, a popular way to raise funds for products and services usually related to cryptocurrency.
+min-token-sale is a minimal implementation of a token presale in Cairo. A presale (formerly known as ICO) is the equivalent of an IPO, a popular way to raise funds for products and services usually related to cryptocurrency.
 
-The thought process for this application is a user interested in participating in the ICO needs to first register with 0.001ETH by calling the `register` function, then once the ICO duration specified using the `ICO_DURATION` expires, he can now call the external function claim to claim his share of ICO tokens.
+The thought process for this application is a user interested in participating in the presale needs to first register with 0.001ETH by calling the `register` function, then once the ICO duration specified using the `ICO_DURATION` expires, he can now call the external function claim to claim his share of tokens.
 
-PS: All users partaking in the ICO pays same amount for registration, and claims equal amount of tokens.
+PS: All users partaking in the presale pays same amount for registration, and claims equal amount of tokens.
 
 Note: Remember to call `approve(, reg_amount)` on the StarkNet ETH contract before calling the `register` function.
 
@@ -61,6 +61,12 @@ In this repo we demonstrate how to implement a commit-reveal scheme by building 
 During the bidding period a bidder calls the `make_bid` function, a bidder does not actually send their bid, but only a hashed version of it. Since it is currently considered practically impossible to find two (sufficiently long) values whose hash values are equal, the bidder commits to the bid by that. After the end of the bidding period, the bidders have to reveal their bids by calling the `reveal` function: They send their values unencrypted, and the contract checks that the hashed value `bid_hash` is the same as the one provided during the bidding period `bid_commit`.
 
 At the end of the auction, the auctioneer is paid the bid of the highest bidder, and other bidders get refunded their bids by claiming using the `claim_lost_bid` function.
+
+### MIN-ERC721
+
+In this repo, we demonstrate how to build an ERC721(NFT) contract, by implementing one from scratch. By the time you are done, you should be able to build and deploy your own cool NFTs on Starknet.
+
+The goal for this project is to build and deploy a simple ERC721 contract.
 
 
 
