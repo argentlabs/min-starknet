@@ -4,3 +4,4 @@ mod min_token_sale;
 mod min_amm;
 mod min_commit_reveal;
 mod min_erc721;
+mod min_account;
