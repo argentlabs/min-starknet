@@ -238,7 +238,7 @@ mod BlindAuction {
     }
 
     ////////////////////////////////
-    // Storage Access implementation for HighestBidder Struct
+    // Storage Access implementation for HighestBidder Struct - such a PITA, hopefully we won't need to do this in the future
     ////////////////////////////////
     impl HighestBidderStorageAccess of StorageAccess::<HighestBidder> {
         fn write(address_domain: u32, base: StorageBaseAddress, value: HighestBidder) -> SyscallResult::<()>{
