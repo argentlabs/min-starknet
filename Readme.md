@@ -24,8 +24,6 @@ Min-StarkNet is a side project aimed at creating minimal, intentionally-limited 
 
 `git clone git@github.com:Darlington02/min-starknet.git`
 
-**PS: This project has two branches! The `master` branch serves as a guide, the `develop` branch gives a boilerplate for building on your own.**
-
 ## Description
 
 ### MIN-ENS
@@ -56,7 +54,7 @@ The max amount of token that can belong to the AMM `BALANCE_UPPER_BOUND`, the ma
 The `get_account_token_balance` and `get_pool_token_balance` functions can be used to get the account and pool balance repspectively. The `set_pool_token_balance` is used to set the pool balance for a specific token type, and the `add_demo_token` can be used to add demo tokens to a user's account for testing the deployed app. Finally the `init_pool` is used to initialize a new AMM pool and the `swap` function is called to perform a swap.
 
 ### MIN-COMMIT-REVEAL
-In this repo we demonstrate how to implement a commit-reveal scheme by building a blind auction. A blind auction is a sealed bidding auction in which bidders simultaneously submit bids to the auctioneer without having knowledge of what other bidders bidded. This might sound paradoxical in a public system like blockchains, but cryptography comes to the rescue.
+In this section we demonstrate how to implement a commit-reveal scheme by building a blind auction. A blind auction is a sealed bidding auction in which bidders simultaneously submit bids to the auctioneer without having knowledge of what other bidders bidded. This might sound paradoxical in a public system like blockchains, but cryptography comes to the rescue.
 
 During the bidding period a bidder calls the `make_bid` function, a bidder does not actually send their bid, but only a hashed version of it. Since it is currently considered practically impossible to find two (sufficiently long) values whose hash values are equal, the bidder commits to the bid by that. After the end of the bidding period, the bidders have to reveal their bids by calling the `reveal` function: They send their values unencrypted, and the contract checks that the hashed value `bid_hash` is the same as the one provided during the bidding period `bid_commit`.
 
@@ -64,11 +62,26 @@ At the end of the auction, the auctioneer is paid the bid of the highest bidder,
 
 ### MIN-ERC721
 
-In this repo, we demonstrate how to build an ERC721(NFT) contract, by implementing one from scratch. By the time you are done, you should be able to build and deploy your own cool NFTs on Starknet.
+In this section, we demonstrate how to build an ERC721(NFT) contract, by implementing one from scratch. By the time you are done, you should be able to build and deploy your own cool NFTs on Starknet.
 
 The goal for this project is to build and deploy a simple ERC721 contract.
 
+### MIN-ACCOUNT
+Min-account contains different account implementations, aiming to teach you how to write AA accounts on Starknet. All Starknet accounts are expected to include two major functions:
+1. __validate__
+2. __execute__
 
+The `__validate__` function simply ensures txns submitted to the sequencer, was indeed intitatied by the account owner. Basically signature validation happens here…you could write custom logics to use any signature or verification scheme of your choice, while the `__execute__` function is responsible for executing the txn logic - calls to functions in the target smart contract. In here, the developer can control the flow of the txn, such as enabling multi calls (aggregating multiple tens into one), multisig logic, etc.
+
+Here are the examples you'll find in this section:
+- `account.cairo`
+This file contains code for a basic Starknet account. 
+- `multicall.cairo`
+In this example, we are going to implement an account with multicall capabilities on Starknet. This account will be able to execute multiple transactions in one call.
+- `multisig.cairo`
+In this example, we are going to be implementing a simple multisig on Starknet. A multisig wallet requires more than one signature to execute a transaction.
+
+### MIN-MESSAGING-BRIDGE
 
 ## PLAYGROUND
 
