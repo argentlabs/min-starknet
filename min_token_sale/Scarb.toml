@@ -1,0 +1,6 @@
+[package]
+name = "min_token_sale"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=1.0.0"

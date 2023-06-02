@@ -1,5 +1,4 @@
 #[contract]
-
 mod ERC20Contract {
     ////////////////////////////////
     // library imports
