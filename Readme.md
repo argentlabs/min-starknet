@@ -20,6 +20,8 @@ Min-StarkNet is a side project aimed at creating minimal, intentionally-limited 
 
 - Install and setup [Scarb](https://docs.swmansion.com/scarb/download)
 
+- Install and setup [Protostar](https://docs.swmansion.com/protostar/docs/cairo-1/installation)
+
 - Go ahead to clone the repo, by running the command below on a terminal:
 
 `git clone git@github.com:Darlington02/min-starknet.git`
@@ -66,22 +68,32 @@ In this section, we demonstrate how to build an ERC721(NFT) contract, by impleme
 
 The goal for this project is to build and deploy a simple ERC721 contract.
 
-### MIN-ACCOUNT
-Min-account contains different account implementations, aiming to teach you how to write AA accounts on Starknet. All Starknet accounts are expected to include two major functions:
+### MIN-ACCOUNT-MULTICALL
+Min-account-multicall aims to teach you how to write AA accounts on Starknet. All Starknet accounts are expected to include two major functions:
 1. __validate__
 2. __execute__
 
 The `__validate__` function simply ensures txns submitted to the sequencer, was indeed intitatied by the account owner. Basically signature validation happens here…you could write custom logics to use any signature or verification scheme of your choice, while the `__execute__` function is responsible for executing the txn logic - calls to functions in the target smart contract. In here, the developer can control the flow of the txn, such as enabling multi calls (aggregating multiple tens into one), multisig logic, etc.
 
-Here are the examples you'll find in this section:
-- `account.cairo`
-This file contains code for a basic Starknet account. 
-- `multicall.cairo`
 In this example, we are going to implement an account with multicall capabilities on Starknet. This account will be able to execute multiple transactions in one call.
-- `multisig.cairo`
+
+### MIN-ACCOUNT-MULTISIG
 In this example, we are going to be implementing a simple multisig on Starknet. A multisig wallet requires more than one signature to execute a transaction.
 
+The flow of this multisig account is:
+- First multisig owners are added on account deployment.
+- To submit a transaction, any of the owners can call the `submit_transaction` function. 
+- Submitted transactions can further then be confirmed by the owners of the multisig using the `confirm_transaction`.
+- The transaction will be successfully executed if the number of confirmations, is greater than or equal to the threshold number of signatures, else it fails.
+
 ### MIN-MESSAGING-BRIDGE
+The ability to create custom messaging bridges on StarkNet for data and asset transfers, is one of the major features that makes StarkNet stand out from other existing rollups.
+
+In this project, we are going to be creating a simple custom ERC20 Messaging bridge that can help a user transfer an ERC20 token between StarkNet and Ethereum.
+
+The thought process for this application, is we have an ERC20 token deployed on StarkNet, which we intend bridging to Ethereum, to enable users send their tokens between layers. We first have to deploy a clone of our ERC20 token on Ethereum, with zero initial supply (this is done to ensure that the total supply across the different layers when summed up, remains constant). We then deploy our token bridge on both layers, setting the ERC20 token we want to particularly bridge.
+
+Each time a bridge happens from L2 -> L1, the bridged tokens are locked in the L2 bridge contract, and same amount of the bridged tokens are minted on L1 for the user, and each time a bridge happens from L1 -> L2, the bridged tokens are burnt, and the same amount of bridged tokens is released or transferred from the L2 bridge contract to the user, thereby always keeping total supply constant.
 
 ## PLAYGROUND
 
