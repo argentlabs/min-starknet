@@ -2,9 +2,6 @@ use min_erc20::contracts::ERC20;
 use array::ArrayTrait;
 use result::ResultTrait;
 use option::OptionTrait;
-use starknet::ContractAddress;
-use starknet::contract_address_try_from_felt252;
-use integer::u256_from_felt252;
 
 const OWNER: felt252 = 12345;
 const ADDR1: felt252 = 45678;

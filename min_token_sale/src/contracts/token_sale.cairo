@@ -55,6 +55,7 @@ mod TokenSale {
     struct Storage {
         token_address: ContractAddress,
         admin_address: ContractAddress,
+        eth_address: ContractAddress,
         registered_address: LegacyMap::<ContractAddress, bool>,
         claimed_address: LegacyMap::<ContractAddress, bool>,
         ico_start_time: u64,
@@ -65,9 +66,10 @@ mod TokenSale {
     // constructor - initialized on deployment
     ////////////////////////////////
     #[constructor]
-    fn constructor(_token_address: ContractAddress, _admin_address: ContractAddress) {
+    fn constructor(_token_address: ContractAddress, _admin_address: ContractAddress, _eth_address: ContractAddress) {
         admin_address::write(_admin_address);
         token_address::write(_token_address);
+        eth_address::write(_eth_address);
 
         let current_time: u64 = get_block_timestamp();
         let end_time: u64 = current_time + ICO_DURATION;
@@ -95,15 +97,15 @@ mod TokenSale {
         let token = token_address::read();
         let end_time: u64 = ico_end_time::read();
         let current_time: u64 = get_block_timestamp();
-        let eth_contract: ContractAddress = contract_address_try_from_felt252(0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7).unwrap();
+        let eth_contract: ContractAddress = eth_address::read();
 
         // check that ICO has not ended
-        assert(current_time < end_time, 'ICO has been completed');
+        //assert(current_time < end_time, 'ICO has been completed');
         // check that user is not already registered
         assert(is_registered(caller) == false, 'You have already registered!');
         // check that the user has beforehand approved the address of the ICO contract to spend the registration amount from his ETH balance
-        let allowance = IERC20Dispatcher {contract_address: eth_contract}.allowance(caller, this_contract);
-        assert(allowance >= u256_from_felt252(REGPRICE), 'approve at least 0.001 ETH!');
+        // let allowance = IERC20Dispatcher {contract_address: eth_contract}.allowance(caller, this_contract);
+        // assert(allowance >= u256_from_felt252(REGPRICE), 'approve at least 0.001 ETH!');
 
         IERC20Dispatcher {contract_address: eth_contract}.transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
 
