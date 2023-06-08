@@ -83,7 +83,7 @@ mod AMM {
     // @dev function to swap token between the given account and the pool
     ////////////////////////////////
     #[external]
-    fn swap(token_from: felt252, amount_from: u128) -> u128 {
+    fn swap(token_from: felt252, amount_from: u128) {
         let account = get_caller_address();
 
         // verify token_from is TOKEN_TYPE_A or TOKEN_TYPE_B
@@ -96,8 +96,7 @@ mod AMM {
         assert(account_from_balance > amount_from, 'Insufficient balance!');
 
         let token_to = get_opposite_token(token_from);
-        let amount_to = do_swap(account, token_from, token_to, amount_from);
-        return (amount_to);
+        do_swap(account, token_from, token_to, amount_from);
     }
 
     ////////////////////////////////
@@ -127,7 +126,7 @@ mod AMM {
     ////////////////////////////////
     // internal function that swaps tokens between the given account and the pool
     ////////////////////////////////
-    fn do_swap(account: ContractAddress, token_from: felt252, token_to: felt252, amount_from: u128) -> u128 {
+    fn do_swap(account: ContractAddress, token_from: felt252, token_to: felt252, amount_from: u128) {
         // get pool balance
         let amm_from_balance = get_pool_token_balance(token_from);
         let amm_to_balance = get_pool_token_balance(token_to);
@@ -142,7 +141,5 @@ mod AMM {
         // update pool balances
         set_pool_token_balance(token_from, (amm_from_balance + amount_from));
         set_pool_token_balance(token_to, (amm_to_balance - amount_to));
-
-        return (amount_to);
     }
 }
