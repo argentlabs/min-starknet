@@ -95,10 +95,6 @@ The thought process for this application, is we have an ERC20 token deployed on 
 
 Each time a bridge happens from L2 -> L1, the bridged tokens are locked in the L2 bridge contract, and same amount of the bridged tokens are minted on L1 for the user, and each time a bridge happens from L1 -> L2, the bridged tokens are burnt, and the same amount of bridged tokens is released or transferred from the L2 bridge contract to the user, thereby always keeping total supply constant.
 
-## PLAYGROUND
-
-Deployed contracts coming in soon..
-
 ## CONTRIBUTION GUIDELINES
 1. Keep implementation as simple and minimalistic as possible.
 2. Comment codes in details to enable others understand what your codes do.

@@ -23,8 +23,14 @@ fn __setup__() -> Array<felt252> {
     // prepare contract
     let prepared = prepare(class_hash, @constructor_calldata).unwrap();
 
+    // start warp
+    start_warp(100, prepared.contract_address).unwrap();
+
     // deploy contract
     let deployed_contract_address = deploy(prepared).unwrap();
+
+    // stop warp
+    stop_warp(deployed_contract_address).unwrap();
 
     // construct and return an array of deployed_contract_address and deployed_eth_address
     let mut array = ArrayTrait::new();
@@ -79,15 +85,16 @@ fn test_is_registered() {
     assert(*retdata.at(0_u32) == 0, 'incorrect status');
 }
 
-#[test]
+#[test] // this test fails for now, will amend soon
 fn test_register() {
     // deploy contract
     let retdata: Array<felt252> = __setup__();
     let deployed_contract_address = *retdata.at(0_u32);
     let deployed_eth_address = *retdata.at(1_u32);
 
-    // start prank
+    // start prank and warp
     start_prank(USER1, deployed_contract_address).unwrap();
+    start_warp(120, deployed_contract_address).unwrap();
 
     // approve to spend 0.01 ETH
     let mut calldata = ArrayTrait::new();

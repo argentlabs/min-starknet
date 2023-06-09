@@ -100,12 +100,12 @@ mod TokenSale {
         let eth_contract: ContractAddress = eth_address::read();
 
         // check that ICO has not ended
-        //assert(current_time < end_time, 'ICO has been completed');
+        assert(current_time < end_time, 'ICO has been completed');
         // check that user is not already registered
         assert(is_registered(caller) == false, 'You have already registered!');
         // check that the user has beforehand approved the address of the ICO contract to spend the registration amount from his ETH balance
-        // let allowance = IERC20Dispatcher {contract_address: eth_contract}.allowance(caller, this_contract);
-        // assert(allowance >= u256_from_felt252(REGPRICE), 'approve at least 0.001 ETH!');
+        let allowance = IERC20Dispatcher {contract_address: eth_contract}.allowance(caller, this_contract);
+        assert(allowance >= u256_from_felt252(REGPRICE), 'approve at least 0.001 ETH!');
 
         IERC20Dispatcher {contract_address: eth_contract}.transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
 
