@@ -10,7 +10,7 @@
 
 ## MIN-STARKNET
 
-Min-StarkNet is a side project aimed at creating minimal, intentionally-limited implementations of different protocols, standards and concepts to help a Cairo beginner learn and become familiar with basic Cairo syntaxes, quickly advancing from beginner to intermediate😉. This repo should help you get up to speed and make you comfortable with writing the new Cairo.
+Min-Starknet is a side project aimed at creating minimal, intentionally-limited implementations of different protocols, standards and concepts to help a Cairo beginner learn and become familiar with basic Cairo syntaxes, quickly advancing from beginner to intermediate😉. This repo should help you get up to speed and make you comfortable with writing the new Cairo.
 
 ## Getting Started
 
@@ -25,6 +25,8 @@ Min-StarkNet is a side project aimed at creating minimal, intentionally-limited 
 - Go ahead to clone the repo, by running the command below on a terminal:
 
 `git clone git@github.com:Darlington02/min-starknet.git`
+
+**PS:** The codes in the main branch do not contain the most recent syntax changes due to incompatibility with scarb 0.4. You can check the new syntaxes by checking out to the `new_syntax` branch, but note that the `new_syntax` codes will not compile with Scarb and Protostar ATM.
 
 ## Description
 
@@ -94,6 +96,7 @@ In this project, we are going to be creating a simple custom ERC20 Messaging bri
 The thought process for this application, is we have an ERC20 token deployed on StarkNet, which we intend bridging to Ethereum, to enable users send their tokens between layers. We first have to deploy a clone of our ERC20 token on Ethereum, with zero initial supply (this is done to ensure that the total supply across the different layers when summed up, remains constant). We then deploy our token bridge on both layers, setting the ERC20 token we want to particularly bridge.
 
 Each time a bridge happens from L2 -> L1, the bridged tokens are locked in the L2 bridge contract, and same amount of the bridged tokens are minted on L1 for the user, and each time a bridge happens from L1 -> L2, the bridged tokens are burnt, and the same amount of bridged tokens is released or transferred from the L2 bridge contract to the user, thereby always keeping total supply constant.
+
 
 ## CONTRIBUTION GUIDELINES
 1. Keep implementation as simple and minimalistic as possible.
