@@ -1,32 +1,33 @@
 use starknet::ContractAddress;
-#[abi]
-trait IERC20 {
+
+#[starknet::interface]
+trait IERC20<TStorage> {
     #[view]
-    fn get_name() -> felt252;
+    fn get_name(self: @TStorage) -> felt252;
 
     #[view]
-    fn get_symbol() -> felt252;
+    fn get_symbol(self: @TStorage) -> felt252;
 
     #[view]
-    fn get_total_supply() -> felt252;
+    fn get_total_supply(self: @TStorage) -> felt252;
 
     #[view]
-    fn balance_of(account: ContractAddress) -> u256;
+    fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
 
     #[view]
-    fn allowance(owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn allowance(self: @TStorage, owner: ContractAddress, spender: ContractAddress) -> u256;
 
     #[external]
-    fn transfer(recipient: ContractAddress, amount: u256);
+    fn transfer(ref self: TStorage, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn transfer_from(sender: ContractAddress, recipient: ContractAddress, amount: u256);
+    fn transfer_from(ref self: TStorage, sender: ContractAddress, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn approve(spender: ContractAddress, amount: u256);
+    fn approve(ref self: TStorage, spender: ContractAddress, amount: u256);
 }
 
-#[contract]
+#[starknet::contract]
 mod MessagingBridge {
     ////////////////////////////////
     // library imports
@@ -47,6 +48,7 @@ mod MessagingBridge {
     ////////////////////////////////
     // storage variables
     ////////////////////////////////
+    #[storage]
     struct Storage {
         token_l2_address: ContractAddress,
         bridge_l1_address: felt252,
@@ -57,18 +59,17 @@ mod MessagingBridge {
     // constructor - initialized on deployment
     ////////////////////////////////
     #[constructor]
-    fn constructor(_token_l2_address: ContractAddress, admin_address: ContractAddress) {
-        token_l2_address::write(_token_l2_address);
-        admin::write(admin_address);
-        return ();
+    fn constructor(ref self: Storage, _token_l2_address: ContractAddress, admin_address: ContractAddress) {
+        self.token_l2_address.write(_token_l2_address);
+        self.admin.write(admin_address);
     }
 
     ////////////////////////////////
     // get_token_balance - retrieves token balance for an address
     ////////////////////////////////
     #[view]
-    fn get_token_balance(address: ContractAddress) -> u256 {
-        let token_address = token_l2_address::read();
+    fn get_token_balance(self: @Storage, address: ContractAddress) -> u256 {
+        let token_address = self.token_l2_address.read();
 
         // call balance_of
         IERC20Dispatcher{ contract_address: token_address }.balance_of(address)
@@ -78,24 +79,24 @@ mod MessagingBridge {
     // set_bridge_l1_address - sets l1 bridge address to storage
     ////////////////////////////////
     #[external]
-    fn set_bridge_l1_address(address: EthAddress) {
+    fn set_bridge_l1_address(ref self: Storage, address: EthAddress) {
         // check that caller is bridge admin
-        let admin_address = admin::read();
+        let admin_address = self.admin.read();
         let caller = get_caller_address();
         assert(caller == admin_address, 'caller is not admin!');
 
-        bridge_l1_address::write(address.into());
+        self.bridge_l1_address.write(address.into());
     }
 
     ////////////////////////////////
     // withdraw_to_l1 - can be called to bridge tokens to L1
     ////////////////////////////////
     #[external]
-    fn withdraw_to_l1(amount: u256, l1_recipient: EthAddress) {
+    fn withdraw_to_l1(ref self: Storage, amount: u256, l1_recipient: EthAddress) {
         let caller = get_caller_address();
         let this_contract = get_contract_address();
-        let l2_token_address = token_l2_address::read();
-        let l1_bridge_address = bridge_l1_address::read();
+        let l2_token_address = self.token_l2_address.read();
+        let l1_bridge_address = self.bridge_l1_address.read();
 
         // check that the user has beforehand approved the bridge contract to spend the withdrawn amount from his token balance
         let allowance = IERC20Dispatcher {contract_address: l2_token_address}.allowance(caller, this_contract);
@@ -119,9 +120,9 @@ mod MessagingBridge {
     // deposit_to_l2 - L1 handler to deposit funds from L1 to Starknet
     ////////////////////////////////
     #[l1_handler]
-    fn deposit_to_l2(from_address: felt252, user_address: ContractAddress, amount: u256) {
-        let l1_bridge_address = bridge_l1_address::read();
-        let l2_token_address = token_l2_address::read();
+    fn deposit_to_l2(ref self: Storage, from_address: felt252, user_address: ContractAddress, amount: u256) {
+        let l1_bridge_address = self.bridge_l1_address.read();
+        let l2_token_address = self.token_l2_address.read();
         assert(from_address == l1_bridge_address, 'incorrect bridge incorrect');
 
         // transfer amount from locked bridge tokens to the user

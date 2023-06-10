@@ -1,4 +1,4 @@
-#[contract]
+#[starknet::contract]
 
 mod AMM {
     ////////////////////////////////
@@ -23,6 +23,7 @@ mod AMM {
     ////////////////////////////////
     // storage variables
     ////////////////////////////////
+    #[storage]
     struct Storage {
         account_balance: LegacyMap::<(ContractAddress, felt252), u128>,
         pool_balance: LegacyMap::<felt252, u128>,
@@ -32,84 +33,80 @@ mod AMM {
     // function to return account balance for a given token
     ////////////////////////////////
     #[view]
-    fn get_account_token_balance(account: ContractAddress, token_type: felt252) -> u128 {
-        account_balance::read((account, token_type))
+    fn get_account_token_balance(self: @Storage, account: ContractAddress, token_type: felt252) -> u128 {
+        self.account_balance.read((account, token_type))
     }
 
     ////////////////////////////////
     // @dev function to return the pool's balance for a token type
     ////////////////////////////////
     #[view]
-    fn get_pool_token_balance(token_type: felt252) -> u128 {
-        pool_balance::read(token_type)
+    fn get_pool_token_balance(self: @Storage, token_type: felt252) -> u128 {
+        self.pool_balance.read(token_type)
     }
 
     ////////////////////////////////
     // @dev function to set pool balance for a given token
     ////////////////////////////////
     #[external]
-    fn set_pool_token_balance(token_type: felt252, balance: u128) {
+    fn set_pool_token_balance(ref self: Storage, token_type: felt252, balance: u128) {
         assert((BALANCE_UPPER_BOUND - 1) > balance, 'exceeds maximum allowed tokens!');
 
-        pool_balance::write(token_type, balance);
-        return ();
+        self.pool_balance.write(token_type, balance);
     }
 
     ////////////////////////////////
     // @dev function to add demo token to the given account
     ////////////////////////////////
     #[external]
-    fn add_demo_token(token_a_amount: u128, token_b_amount: u128) {
+    fn add_demo_token(ref self: Storage, token_a_amount: u128, token_b_amount: u128) {
         let account = get_caller_address();
 
-        modify_account_balance(account, TOKEN_TYPE_A, token_a_amount);
-        modify_account_balance(account, TOKEN_TYPE_B, token_b_amount);
-        return ();
+        modify_account_balance(ref self, account, TOKEN_TYPE_A, token_a_amount);
+        modify_account_balance(ref self, account, TOKEN_TYPE_B, token_b_amount);
     }
 
     ////////////////////////////////
     // @dev function to intialize AMM
     ////////////////////////////////
     #[external]
-    fn init_pool(token_a: u128, token_b: u128) {
+    fn init_pool(ref self: Storage, token_a: u128, token_b: u128) {
         assert(((POOL_UPPER_BOUND - 1) > token_a) & ((POOL_UPPER_BOUND - 1) > token_b), 'exceeds maximum allowed tokens!');
 
-        set_pool_token_balance(TOKEN_TYPE_A, token_a);
-        set_pool_token_balance(TOKEN_TYPE_B, token_b);
-        return ();
+        set_pool_token_balance(ref self, TOKEN_TYPE_A, token_a);
+        set_pool_token_balance(ref self, TOKEN_TYPE_B, token_b);
     }
 
     ////////////////////////////////
     // @dev function to swap token between the given account and the pool
     ////////////////////////////////
     #[external]
-    fn swap(token_from: felt252, amount_from: u128) {
+    fn swap(ref self: Storage, token_from: felt252, amount_from: u128) {
         let account = get_caller_address();
 
         // verify token_from is TOKEN_TYPE_A or TOKEN_TYPE_B
-        assert(token_from - TOKEN_TYPE_A == 0 | token_from - TOKEN_TYPE_B == 0, 'token not allowed in the pool!');
+        assert(token_from - TOKEN_TYPE_A == 0 || token_from - TOKEN_TYPE_B == 0, 'token not allowed in the pool!');
         // check requested amount_from is valid
         assert((BALANCE_UPPER_BOUND - 1) > amount_from, 'exceeds maximum allowed tokens');
 
         // check user has enough funds
-        let account_from_balance = get_account_token_balance(account, token_from);
+        let account_from_balance = get_account_token_balance(@self, account, token_from);
         assert(account_from_balance > amount_from, 'Insufficient balance!');
 
         let token_to = get_opposite_token(token_from);
-        do_swap(account, token_from, token_to, amount_from);
+        do_swap(ref self, account, token_from, token_to, amount_from);
     }
 
     ////////////////////////////////
     // internal function that updates account balance for a given token
     ////////////////////////////////
-    fn modify_account_balance(account: ContractAddress, token_type: felt252, amount: u128) {
-        let current_balance = account_balance::read((account, token_type));
+    fn modify_account_balance(ref self: Storage, account: ContractAddress, token_type: felt252, amount: u128) {
+        let current_balance = self.account_balance.read((account, token_type));
         let new_balance = current_balance + amount;
 
         assert((BALANCE_UPPER_BOUND - 1) > new_balance, 'exceeds maximum allowed tokens');
 
-        account_balance::write((account, token_type), new_balance);
-        return ();
+        self.account_balance.write((account, token_type), new_balance);
     }
 
     ////////////////////////////////
@@ -126,20 +123,20 @@ mod AMM {
     ////////////////////////////////
     // internal function that swaps tokens between the given account and the pool
     ////////////////////////////////
-    fn do_swap(account: ContractAddress, token_from: felt252, token_to: felt252, amount_from: u128) {
+    fn do_swap(ref self: Storage, account: ContractAddress, token_from: felt252, token_to: felt252, amount_from: u128) {
         // get pool balance
-        let amm_from_balance = get_pool_token_balance(token_from);
-        let amm_to_balance = get_pool_token_balance(token_to);
+        let amm_from_balance = get_pool_token_balance(@self, token_from);
+        let amm_to_balance = get_pool_token_balance(@self, token_to);
 
         // calculate swap amount
         let amount_to = (amm_to_balance * amount_from) / (amm_from_balance + amount_from);
 
         // update account balances
-        modify_account_balance(account, token_from, (0 - amount_from));
-        modify_account_balance(account, token_to, amount_to);
+        modify_account_balance(ref self, account, token_from, (0 - amount_from));
+        modify_account_balance(ref self, account, token_to, amount_to);
 
         // update pool balances
-        set_pool_token_balance(token_from, (amm_from_balance + amount_from));
-        set_pool_token_balance(token_to, (amm_to_balance - amount_to));
+        set_pool_token_balance(ref self, token_from, (amm_from_balance + amount_from));
+        set_pool_token_balance(ref self, token_to, (amm_to_balance - amount_to));
     }
 }

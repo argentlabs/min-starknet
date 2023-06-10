@@ -1,32 +1,33 @@
 use starknet::ContractAddress;
-#[abi]
-trait IERC20 {
+
+#[starknet::interface]
+trait IERC20<TStorage> {
     #[view]
-    fn get_name() -> felt252;
+    fn get_name(self: @TStorage) -> felt252;
 
     #[view]
-    fn get_symbol() -> felt252;
+    fn get_symbol(self: @TStorage) -> felt252;
 
     #[view]
-    fn get_total_supply() -> felt252;
+    fn get_total_supply(self: @TStorage) -> felt252;
 
     #[view]
-    fn balance_of(account: ContractAddress) -> u256;
+    fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
 
     #[view]
-    fn allowance(owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn allowance(self: @TStorage, owner: ContractAddress, spender: ContractAddress) -> u256;
 
     #[external]
-    fn transfer(recipient: ContractAddress, amount: u256);
+    fn transfer(ref self: TStorage, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn transfer_from(sender: ContractAddress, recipient: ContractAddress, amount: u256);
+    fn transfer_from(ref self: TStorage, sender: ContractAddress, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn approve(spender: ContractAddress, amount: u256);
+    fn approve(ref self: TStorage, spender: ContractAddress, amount: u256);
 }
 
-#[contract]
+#[starknet::contract]
 mod BlindAuction {
     ////////////////////////////////
     // library imports
@@ -46,6 +47,7 @@ mod BlindAuction {
     use starknet::StorageBaseAddress;
     use starknet::SyscallResult;
     use starknet::storage_address_from_base_and_offset;
+    use starknet::storage_address_from_base;
     use starknet::storage_write_syscall;
     use starknet::storage_read_syscall;
 
@@ -64,6 +66,7 @@ mod BlindAuction {
     ////////////////////////////////
     // storage variables
     ////////////////////////////////
+    #[storage]
     struct Storage {
         admin: ContractAddress,
         bidding_ends: u64,
@@ -74,42 +77,54 @@ mod BlindAuction {
         bid_claim_status: LegacyMap::<ContractAddress, bool>,
     }
 
+    #[event] 
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        Bidded: Bidded,
+        AuctionEnded: AuctionEnded
+    }
+
     ////////////////////////////////
     // Bidded is emitted when a bid is made 
     ////////////////////////////////
-    #[event]
-    fn Bidded(bidder: ContractAddress, bid_commit: felt252) {}
+    #[derive(Drop, starknet::Event)]
+    struct Bidded {
+        bidder: ContractAddress,
+        bid_commit: felt252
+    }
 
     ////////////////////////////////
     // AuctionEnded is emitted when auction ends
     ////////////////////////////////   
-    #[event]
-    fn AuctionEnded(winner: ContractAddress, highest_bid: u256) {}
+    #[derive(Drop, starknet::Event)]
+    struct AuctionEnded {
+        winner: ContractAddress,
+        highest_bid: u256
+    }
 
     ////////////////////////////////
     // Constructor intialized auction admin, duration for bidding and duration for reveal
     ////////////////////////////////
     #[constructor]
-    fn constructor(_admin: ContractAddress, _bidding_time: u64, _reveal_time: u64) {
+    fn constructor(ref self: Storage, _admin: ContractAddress, _bidding_time: u64, _reveal_time: u64) {
         let current_time: u64 = get_block_timestamp();
         let bidding_end_time = current_time + _bidding_time;
         let reveal_end_time = bidding_end_time + _reveal_time;
 
-        admin::write(_admin);
-        bidding_ends::write(bidding_end_time);
-        reveal_ends::write(reveal_end_time);
-        auction_ended::write(false);
-        return ();
+        self.admin.write(_admin);
+        self.bidding_ends.write(bidding_end_time);
+        self.reveal_ends.write(reveal_end_time);
+        self.auction_ended.write(false);
     }
 
     ////////////////////////////////
     // get_winner returns the highest bidder and winner of the auction after auction ends
     ////////////////////////////////
     #[view]
-    fn get_winner() -> ContractAddress {
-        let auction_status = auction_ended::read();
+    fn get_winner(self: @Storage) -> ContractAddress {
+        let auction_status = self.auction_ended.read();
         assert(auction_status == true, 'auction has not ended');
-        let _highest_bidder = highest_bidder::read();
+        let _highest_bidder = self.highest_bidder.read();
         _highest_bidder.bidder
     }
 
@@ -117,10 +132,10 @@ mod BlindAuction {
     // get_highest_bid returns the winner's bid after auction ends
     ////////////////////////////////
     #[view]
-    fn get_highest_bid() -> u256 {
-        let auction_status = auction_ended::read();
+    fn get_highest_bid(self: @Storage) -> u256 {
+        let auction_status = self.auction_ended.read();
         assert(auction_status == true, 'auction has not ended');
-        let _highest_bidder = highest_bidder::read();
+        let _highest_bidder = self.highest_bidder.read();
         _highest_bidder.bid      
     }
 
@@ -128,11 +143,11 @@ mod BlindAuction {
     // make_bid is called to place a bid 
     ////////////////////////////////
     #[external]
-    fn make_bid(_bid: u256) {
+    fn make_bid(ref self: Storage, _bid: u256) {
         let caller = get_caller_address();
         let this_contract = get_contract_address();
         let current_time: u64 = get_block_timestamp();
-        let bidding_end_time = bidding_ends::read();
+        let bidding_end_time = self.bidding_ends.read();
         let eth_contract: ContractAddress = contract_address_try_from_felt252(0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7).unwrap();
 
         // assert bidding time is not over
@@ -140,7 +155,7 @@ mod BlindAuction {
         // assert bid is not zero
         assert(_bid > u256_from_felt252(0), 'bid must be greater than 0');
         // assert user has not bidded beforehand
-        let _user_bid = user_bid::read(caller);
+        let _user_bid = self.user_bid.read(caller);
         assert(_user_bid == 0, 'already placed a bid');
 
         // hash bid
@@ -154,27 +169,27 @@ mod BlindAuction {
         IERC20Dispatcher {contract_address: eth_contract}.transfer_from(caller, this_contract, _bid);
 
         // add bid to storage
-        user_bid::write(caller, bid_commit);
+        self.user_bid.write(caller, bid_commit);
 
         // emit Bidded
-        Bidded(caller, bid_commit);
-
-        return ();
+        self.emit(Event::Bidded(
+            Bidded{bidder: caller, bid_commit: bid_commit}
+        ));
     }
 
     ////////////////////////////////
     // reveal is called to reveal your bid after bidding is over and calculate the highest bidder
     ////////////////////////////////
     #[external]
-    fn reveal(_bid: u256) {
+    fn reveal(ref self: Storage, _bid: u256) {
         let caller = get_caller_address();
-        let bid_commit = user_bid::read(caller);
+        let bid_commit = self.user_bid.read(caller);
         let current_time: u64 = get_block_timestamp();
-        let bidding_end_time = bidding_ends::read();
-        let reveal_end_time = reveal_ends::read();
+        let bidding_end_time = self.bidding_ends.read();
+        let reveal_end_time = self.reveal_ends.read();
 
         // assert bid time is over and reveal time is not
-        assert(current_time > bidding_end_time & current_time < reveal_end_time, 'not the right time for reveal');
+        assert(current_time > bidding_end_time && current_time < reveal_end_time, 'not the right time for reveal');
 
         // hash bid and check its equal to user's bid_commit
         let bid_to_felt: felt252 = _bid.low.into();
@@ -182,11 +197,11 @@ mod BlindAuction {
         assert(bid_commit == bid_hash, 'invalid bid!');
 
         // check if bid is higher than the highest bid and thus make it the new highest bid
-        let _highest_bidder: HighestBidder = highest_bidder::read();
+        let _highest_bidder: HighestBidder = self.highest_bidder.read();
         let _highest_bid = _highest_bidder.bid;
         if(_bid > _highest_bid) {
             let _highest_bidder = HighestBidder { bidder: caller, bid: _bid };
-            highest_bidder::write(_highest_bidder);
+            self.highest_bidder.write(_highest_bidder);
             return ();
         } else {
             return ();
@@ -197,12 +212,12 @@ mod BlindAuction {
     // end_auction is called by the auction admin to end auction after reveal is over and transfer highest bid to admin
     ////////////////////////////////
     #[external]
-    fn end_auction() {
+    fn end_auction(ref self: Storage) {
         let caller = get_caller_address();
-        let admin_address = admin::read();
+        let admin_address = self.admin.read();
         let current_time: u64 = get_block_timestamp();
-        let reveal_end_time = reveal_ends::read();
-        let _highest_bidder = highest_bidder::read();
+        let reveal_end_time = self.reveal_ends.read();
+        let _highest_bidder = self.highest_bidder.read();
         let eth_contract: ContractAddress = contract_address_try_from_felt252(0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7).unwrap();
 
         // check that caller is the auction admin
@@ -215,31 +230,31 @@ mod BlindAuction {
         IERC20Dispatcher {contract_address: eth_contract}.transfer(admin_address, _highest_bid);
 
         // change highest_bidder claim status to true, to ensure he can't try to claim back his tokens
-        bid_claim_status::write(_highest_bidder.bidder, true);
+        self.bid_claim_status.write(_highest_bidder.bidder, true);
 
         // end Auction 
-        auction_ended::write(true);
+        self.auction_ended.write(true);
         // emit AuctionEnded 
-        AuctionEnded(_highest_bidder.bidder, _highest_bid);
-
-        return ();
+        self.emit(Event::AuctionEnded(
+            AuctionEnded{winner: _highest_bidder.bidder, highest_bid: _highest_bid}
+        ));
     }
 
     ////////////////////////////////
     // claim_lost_bid is called by other members of the auction to withdraw their bid commitment after winner is announced
     ////////////////////////////////
     #[external]
-    fn claim_lost_bid(_bid: u256) {
+    fn claim_lost_bid(ref self: Storage, _bid: u256) {
         let caller = get_caller_address();
-        let auction_status = auction_ended::read();
-        let bid_commit = user_bid::read(caller);
+        let auction_status = self.auction_ended.read();
+        let bid_commit = self.user_bid.read(caller);
         let eth_contract: ContractAddress = contract_address_try_from_felt252(0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7).unwrap();
         
         // check auction has ended
         assert(auction_status == true, 'auction has not ended!');
 
         // check caller has not claimed previously
-        let claim_status = bid_claim_status::read(caller);
+        let claim_status = self.bid_claim_status.read(caller);
         assert(claim_status == false, 'you do not have claim rights!');
 
         // hash bid and check its equal to user's bid_commit
@@ -251,9 +266,7 @@ mod BlindAuction {
         IERC20Dispatcher {contract_address: eth_contract}.transfer(caller, _bid);
 
         // mark user as refunded
-        bid_claim_status::write(caller, true);
-        
-        return ();
+        self.bid_claim_status.write(caller, true);
     }
 
     ////////////////////////////////
@@ -270,12 +283,12 @@ mod BlindAuction {
         fn write(address_domain: u32, base: StorageBaseAddress, value: HighestBidder) -> SyscallResult::<()>{
             storage_write_syscall(
                 address_domain,
-                storage_address_from_base_and_offset(base, 0_u8),
+                storage_address_from_base(base),
                 contract_address_to_felt252(value.bidder)
             );
             storage_write_syscall(
                 address_domain,
-                storage_address_from_base_and_offset(base, 1_u8),
+                storage_address_from_base(base),
                 value.bid.low.into()
             )
         }
@@ -283,12 +296,12 @@ mod BlindAuction {
         fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult::<HighestBidder> {
             let bidder_result = storage_read_syscall(
                 address_domain,
-                storage_address_from_base_and_offset(base, 1_u8)
+                storage_address_from_base(base)
             )?;
 
             let bid_result = storage_read_syscall(
                 address_domain,
-                storage_address_from_base_and_offset(base, 2_u8)
+                storage_address_from_base(base)
             )?;
 
             Result::Ok(
@@ -297,6 +310,42 @@ mod BlindAuction {
                     bid: u256_from_felt252(bid_result),
                 }
             )
+        }
+
+        fn write_at_offset_internal(address_domain: u32,  base: StorageBaseAddress, offset: u8, value: HighestBidder) -> SyscallResult::<()> {
+            storage_write_syscall(
+                address_domain,
+                storage_address_from_base_and_offset(base, offset),
+                contract_address_to_felt252(value.bidder)
+            );
+            storage_write_syscall(
+                address_domain,
+                storage_address_from_base_and_offset(base, offset + 1_u8),
+                value.bid.low.into()
+            )
+        }
+
+        fn read_at_offset_internal(address_domain: u32, base: StorageBaseAddress, offset: u8) -> SyscallResult::<HighestBidder> {
+            let bidder_result = storage_read_syscall(
+                address_domain,
+                storage_address_from_base_and_offset(base, offset)
+            )?;
+
+            let bid_result = storage_read_syscall(
+                address_domain,
+                storage_address_from_base_and_offset(base, offset + 1_u8)
+            )?;
+
+            Result::Ok(
+                HighestBidder {
+                    bidder: contract_address_try_from_felt252(bidder_result).unwrap(),
+                    bid: u256_from_felt252(bid_result),
+                }
+            )
+        }
+
+        fn size_internal(value: HighestBidder) -> u8 {
+            2_u8
         }
     }
 }
