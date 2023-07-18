@@ -1,22 +1,8 @@
 [package]
-name = "min_starknet"
+name = "project"
 version = "0.1.0"
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
 
 [dependencies]
-starknet = ">=1.0.0"
-
-min_ens = { path = "min_ens" }
-min_erc20 = { path = "min_erc20" }
-min_erc721 = { path = "min_erc721" }
-min_token_sale = { path = "min_token_sale" }
-min_amm = { path = "min_amm" }
-min_commit_reveal = { path = "min_commit_reveal" }
-min_account_multicall = { path = "min_account_multicall" }
-min_multisig = { path = "min_multisig" }
-min_messaging_bridge = { path = "min_messaging_bridge/L2" }
-
-[scripts]
-build = "protostar build"
-test = "protostar test"
+# foo = { path = "vendor/foo" }
