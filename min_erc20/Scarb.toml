@@ -1,6 +1,0 @@
-[package]
-name = "min_erc20"
-version = "0.1.0"
-
-[dependencies]
-starknet = ">=1.0.0"
