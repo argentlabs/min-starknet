@@ -1,30 +1,30 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IERC20<TStorage> {
+trait IERC20<TContractState> {
     #[view]
-    fn get_name(self: @TStorage) -> felt252;
+    fn get_name(self: @TContractState) -> felt252;
 
     #[view]
-    fn get_symbol(self: @TStorage) -> felt252;
+    fn get_symbol(self: @TContractState) -> felt252;
 
     #[view]
-    fn get_total_supply(self: @TStorage) -> felt252;
+    fn get_total_supply(self: @TContractState) -> felt252;
 
     #[view]
-    fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
+    fn balance_of(self: @TContractState, account: ContractAddress) -> u256;
 
     #[view]
-    fn allowance(self: @TStorage, owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn allowance(self: @TContractState, owner: ContractAddress, spender: ContractAddress) -> u256;
 
     #[external]
-    fn transfer(ref self: TStorage, recipient: ContractAddress, amount: u256);
+    fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn transfer_from(ref self: TStorage, sender: ContractAddress, recipient: ContractAddress, amount: u256);
+    fn transfer_from(ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256);
 
     #[external]
-    fn approve(ref self: TStorage, spender: ContractAddress, amount: u256);
+    fn approve(ref self: TContractState, spender: ContractAddress, amount: u256);
 }
 
 #[starknet::contract]
