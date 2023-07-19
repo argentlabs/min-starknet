@@ -138,9 +138,9 @@ mod ERC721Contract {
             assert(to != owner, 'Approval to current owner');
             assert(get_caller_address() == owner || self.is_approved_for_all(owner, get_caller_address()), 'Not token owner');
             self.token_approvals.write(token_id, to);
-            self.emit(Event::Approval(
-                Approval{owner: self.owner_of(token_id), to: to, token_id: token_id}
-            ));
+            self.emit(
+                Approval{ owner: self.owner_of(token_id), to: to, token_id: token_id }
+            );
         }
 
         ////////////////////////////////
@@ -150,9 +150,9 @@ mod ERC721Contract {
             let owner = get_caller_address();
             assert(owner != operator, 'ERC721: approve to caller');
             self.operator_approvals.write((owner, operator), approved);
-            self.emit(Event::ApprovalForAll(
-                ApprovalForAll{owner: owner, operator: operator, approved: approved}
-            ));
+            self.emit(
+                ApprovalForAll{ owner: owner, operator: operator, approved: approved }
+            );
         }
 
         ////////////////////////////////
@@ -235,7 +235,7 @@ mod ERC721Contract {
 
             // emit Transfer event
             self.emit(
-                Transfer{from: Zeroable::zero(), to: to, token_id: token_id}
+                Transfer{ from: Zeroable::zero(), to: to, token_id: token_id }
             );
         }
 
@@ -256,7 +256,7 @@ mod ERC721Contract {
             self.owners.write(token_id, Zeroable::zero());
             // emit the Transfer event
             self.emit(
-                Transfer{from: owner, to: Zeroable::zero(), token_id: token_id}
+                Transfer{ from: owner, to: Zeroable::zero(), token_id: token_id }
             );
         }
     }

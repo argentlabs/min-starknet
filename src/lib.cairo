@@ -3,4 +3,7 @@ mod min_erc20;
 mod min_token_sale;
 mod min_erc721;
 mod min_amm;
+mod min_commit_reveal;
 mod min_account_multicall;
+mod min_multisig;
+mod min_messaging_bridge;
