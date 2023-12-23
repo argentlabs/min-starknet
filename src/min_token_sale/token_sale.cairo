@@ -21,14 +21,10 @@ trait IERC20<TContractState> {
 
 #[starknet::contract]
 mod TokenSale {
-    use starknet::get_caller_address;
-    use starknet::get_contract_address;
-    use starknet::ContractAddress;
-    use starknet::get_block_timestamp;
+    use starknet::{get_caller_address, get_contract_address, ContractAddress, get_block_timestamp};
     use integer::u256_from_felt252;
 
-    use super::IERC20DispatcherTrait;
-    use super::IERC20Dispatcher;
+    use super::{IERC20DispatcherTrait, IERC20Dispatcher};
 
     const REGPRICE: felt252 = 1000000000000000;
     const ICO_DURATION: u64 = 86400_u64;
@@ -73,7 +69,8 @@ mod TokenSale {
             assert(current_time < end_time, 'ICO has ended');
             assert(self.is_registered.read(caller) == false, 'already registered user');
 
-            IERC20Dispatcher{ contract_address: eth }.transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
+            IERC20Dispatcher { contract_address: eth }
+                .transfer_from(caller, this_contract, u256_from_felt252(REGPRICE));
 
             self.is_registered.write(caller, true);
         }
@@ -92,7 +89,8 @@ mod TokenSale {
             assert(self.is_registered.read(address) == true, 'user is not registered');
             assert(self.is_claimed.read(address) == false, 'user has already claimed');
 
-            IERC20Dispatcher{ contract_address: token }.transfer_from(admin, address, claim_amount);
+            IERC20Dispatcher { contract_address: token }
+                .transfer_from(admin, address, claim_amount);
 
             self.is_claimed.write(address, true);
         }
