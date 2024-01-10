@@ -21,7 +21,7 @@ trait IERC20<TContractState> {
 
 #[starknet::contract]
 mod ERC20 {
-    use starknet::{ContractAddress, get_caller_address, contract_address_const};
+    use starknet::{ ContractAddress, get_caller_address, contract_address_const };
     use zeroable::Zeroable;
     use super::IERC20;
 
